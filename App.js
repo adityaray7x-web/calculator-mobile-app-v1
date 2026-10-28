@@ -1,212 +1,106 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   View,
-  Pressable,
+  TouchableOpacity,
   Dimensions,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const buttonSize = (width - 48) / 4;
 
-const formatNumber = (value) => {
-  if (!Number.isFinite(value)) return 'Error';
+const stats = [
+  { label: 'Tasks', value: '08', color: '#6C63FF' },
+  { label: 'Streak', value: '12d', color: '#00C2A8' },
+  { label: 'Energy', value: '82%', color: '#FFB648' },
+];
 
-  const absValue = Math.abs(value);
-  if (absValue >= 1e9 || (absValue > 0 && absValue < 1e-9)) {
-    return value.toExponential(6).replace(/\.?0+e/, 'e').replace(/\+/, '');
-  }
+const tasks = [
+  { name: 'Design review', time: '09:00', done: true },
+  { name: 'Sprint planning', time: '11:30', done: false },
+  { name: 'Client sync', time: '14:00', done: false },
+  { name: 'Deep work block', time: '16:00', done: false },
+];
 
-  const rounded = Number(value.toFixed(8)).toString();
-  return rounded === '-0' ? '0' : rounded;
-};
-
-const calculate = (a, b, operation) => {
-  switch (operation) {
-    case '+':
-      return a + b;
-    case '-':
-      return a - b;
-    case '×':
-      return a * b;
-    case '÷':
-      if (b === 0) return null;
-      return a / b;
-    default:
-      return b;
-  }
-};
+const quickActions = ['Add task', 'Focus mode', 'Track mood'];
 
 export default function App() {
-  const [displayValue, setDisplayValue] = useState('0');
-  const [storedValue, setStoredValue] = useState(null);
-  const [operator, setOperator] = useState(null);
-  const [waitingForOperand, setWaitingForOperand] = useState(false);
-
-  const resetCalculator = () => {
-    setDisplayValue('0');
-    setStoredValue(null);
-    setOperator(null);
-    setWaitingForOperand(false);
-  };
-
-  const appendDigit = (digit) => {
-    if (waitingForOperand) {
-      setDisplayValue(digit);
-      setWaitingForOperand(false);
-      return;
-    }
-
-    setDisplayValue((prev) => {
-      if (prev === '0' && digit !== '.') {
-        return digit;
-      }
-      return prev + digit;
-    });
-  };
-
-  const appendDecimal = () => {
-    if (waitingForOperand) {
-      setDisplayValue('0.');
-      setWaitingForOperand(false);
-      return;
-    }
-
-    if (!displayValue.includes('.')) {
-      setDisplayValue((prev) => (prev === '' ? '0.' : prev + '.'));
-    }
-  };
-
-  const toggleSign = () => {
-    const current = Number(displayValue);
-    if (Number.isNaN(current)) return;
-    const nextValue = current === 0 ? 0 : -current;
-    setDisplayValue(formatNumber(nextValue));
-  };
-
-  const percentage = () => {
-    const current = Number(displayValue);
-    if (Number.isNaN(current)) return;
-    setDisplayValue(formatNumber(current / 100));
-  };
-
-  const handleOperator = (nextOperator) => {
-    const inputValue = Number(displayValue);
-
-    if (storedValue === null) {
-      setStoredValue(inputValue);
-    } else if (operator) {
-      const result = calculate(Number(storedValue), inputValue, operator);
-
-      if (result === null) {
-        setDisplayValue('Error');
-        setStoredValue(null);
-        setOperator(null);
-        setWaitingForOperand(false);
-        return;
-      }
-
-      setStoredValue(result);
-      setDisplayValue(formatNumber(result));
-    }
-
-    setOperator(nextOperator);
-    setWaitingForOperand(true);
-  };
-
-  const evaluate = () => {
-    if (operator === null || storedValue === null) {
-      return;
-    }
-
-    const result = calculate(Number(storedValue), Number(displayValue), operator);
-
-    if (result === null) {
-      setDisplayValue('Error');
-      setStoredValue(null);
-      setOperator(null);
-      setWaitingForOperand(false);
-      return;
-    }
-
-    setDisplayValue(formatNumber(result));
-    setStoredValue(null);
-    setOperator(null);
-    setWaitingForOperand(false);
-  };
-
-  const buttons = [
-    { label: 'C', type: 'secondary', action: resetCalculator },
-    { label: '±', type: 'secondary', action: toggleSign },
-    { label: '%', type: 'secondary', action: percentage },
-    { label: '÷', type: 'operator', action: () => handleOperator('÷') },
-    { label: '7', type: 'digit', action: () => appendDigit('7') },
-    { label: '8', type: 'digit', action: () => appendDigit('8') },
-    { label: '9', type: 'digit', action: () => appendDigit('9') },
-    { label: '×', type: 'operator', action: () => handleOperator('×') },
-    { label: '4', type: 'digit', action: () => appendDigit('4') },
-    { label: '5', type: 'digit', action: () => appendDigit('5') },
-    { label: '6', type: 'digit', action: () => appendDigit('6') },
-    { label: '-', type: 'operator', action: () => handleOperator('-') },
-    { label: '1', type: 'digit', action: () => appendDigit('1') },
-    { label: '2', type: 'digit', action: () => appendDigit('2') },
-    { label: '3', type: 'digit', action: () => appendDigit('3') },
-    { label: '+', type: 'operator', action: () => handleOperator('+') },
-    { label: '0', type: 'zero', action: () => appendDigit('0') },
-    { label: '.', type: 'digit', action: appendDecimal },
-    { label: '=', type: 'equals', action: evaluate },
-  ];
-
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.eyebrow}>Good morning</Text>
+            <Text style={styles.title}>Koro</Text>
+          </View>
+          <TouchableOpacity style={styles.avatar}>
+            <Text style={styles.avatarText}>K</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.displayPanel}>
-        <Text style={styles.expressionText}>
-          {storedValue !== null && operator ? `${storedValue} ${operator}` : ''}
-        </Text>
-        <Text style={styles.displayText} numberOfLines={1} adjustsFontSizeToFit>
-          {displayValue}
-        </Text>
-      </View>
+        <View style={styles.heroCard}>
+          <View style={styles.heroHeader}>
+            <Text style={styles.heroTitle}>Today's focus</Text>
+            <Text style={styles.heroPercent}>72%</Text>
+          </View>
 
-      <View style={styles.keypad}>
-        {buttons.map((button) => {
-          const isZero = button.label === '0';
-          const isEquals = button.type === 'equals';
+          <View style={styles.progressTrack}>
+            <View style={styles.progressFill} />
+          </View>
 
-          return (
-            <Pressable
-              key={button.label + Math.random()}
-              onPress={button.action}
-              style={({ pressed }) => [
-                styles.button,
-                button.type === 'secondary' && styles.secondaryButton,
-                button.type === 'operator' && styles.operatorButton,
-                button.type === 'equals' && styles.equalsButton,
-                button.type === 'zero' && styles.zeroButton,
-                button.type === 'digit' && styles.digitButton,
-                isZero && styles.zeroButton,
-                isEquals && styles.equalsButton,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.buttonText,
-                  button.type === 'operator' && styles.operatorText,
-                  button.type === 'equals' && styles.equalsText,
-                  button.type === 'secondary' && styles.secondaryText,
-                ]}
-              >
-                {button.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+          <Text style={styles.heroText}>You’re on track to complete the key priorities before lunch.</Text>
+        </View>
+
+        <View style={styles.statsRow}>
+          {stats.map((item) => (
+            <View key={item.label} style={[styles.statCard, { borderColor: item.color }]}>
+              <Text style={[styles.statValue, { color: item.color }]}>{item.value}</Text>
+              <Text style={styles.statLabel}>{item.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Quick actions</Text>
+          <Text style={styles.sectionLink}>See all</Text>
+        </View>
+
+        <View style={styles.actionsRow}>
+          {quickActions.map((action) => (
+            <TouchableOpacity key={action} style={styles.actionChip}>
+              <Text style={styles.actionText}>{action}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Today</Text>
+          <Text style={styles.sectionLink}>4 tasks</Text>
+        </View>
+
+        {tasks.map((task) => (
+          <View key={task.name} style={styles.taskRow}>
+            <View style={[styles.checkbox, task.done && styles.checkboxDone]}>
+              {task.done ? <Text style={styles.checkmark}>✓</Text> : null}
+            </View>
+
+            <View style={styles.taskInfo}>
+              <Text style={[styles.taskName, task.done && styles.taskDone]}>{task.name}</Text>
+              <Text style={styles.taskTime}>{task.time}</Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
+      <View style={styles.bottomNav}>
+        <Text style={[styles.navItem, styles.navActive]}>Home</Text>
+        <Text style={styles.navItem}>Plans</Text>
+        <Text style={styles.navItem}>Insights</Text>
+        <Text style={styles.navItem}>Profile</Text>
       </View>
     </SafeAreaView>
   );
@@ -215,86 +109,213 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#F5F7FF',
   },
-  displayPanel: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingHorizontal: 24,
-    paddingBottom: 16,
-    backgroundColor: '#121212',
-  },
-  expressionText: {
-    minHeight: 28,
-    fontSize: 20,
-    color: '#a8a8a8',
-    textAlign: 'right',
-    marginBottom: 8,
-  },
-  displayText: {
-    fontSize: 64,
-    color: '#f5f5f5',
-    textAlign: 'right',
-    fontWeight: '300',
-  },
-  keypad: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingBottom: 18,
-    backgroundColor: '#1d1d1d',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+  scrollContent: {
+    paddingHorizontal: 20,
     paddingTop: 12,
+    paddingBottom: 30,
   },
-  button: {
-    width: buttonSize,
-    height: buttonSize,
-    margin: 6,
-    borderRadius: 22,
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 18,
+  },
+  eyebrow: {
+    fontSize: 14,
+    color: '#7A7F9A',
+    letterSpacing: 0.4,
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: '800',
+    color: '#131B32',
+    letterSpacing: -1,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#131B32',
     justifyContent: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    alignItems: 'center',
   },
-  buttonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
+  avatarText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 20,
   },
-  digitButton: {
-    backgroundColor: '#2b2b2b',
+  heroCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 18,
+    shadowColor: '#8992B5',
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
+    marginBottom: 18,
   },
-  secondaryButton: {
-    backgroundColor: '#3b3b3b',
+  heroHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  operatorButton: {
-    backgroundColor: '#3f51b5',
+  heroTitle: {
+    fontSize: 18,
+    color: '#1F2A3D',
+    fontWeight: '700',
   },
-  equalsButton: {
-    backgroundColor: '#00acc1',
-    width: buttonSize * 2 + 12,
+  heroPercent: {
+    fontSize: 20,
+    color: '#6C63FF',
+    fontWeight: '800',
   },
-  zeroButton: {
-    width: buttonSize * 2 + 12,
-    backgroundColor: '#2b2b2b',
+  progressTrack: {
+    height: 12,
+    borderRadius: 999,
+    backgroundColor: '#EEF1FF',
+    overflow: 'hidden',
+    marginBottom: 12,
   },
-  buttonText: {
-    fontSize: 30,
-    color: '#ffffff',
-    fontWeight: '500',
+  progressFill: {
+    width: '72%',
+    height: '100%',
+    backgroundColor: '#6C63FF',
+    borderRadius: 999,
   },
-  operatorText: {
-    color: '#f5f5f5',
+  heroText: {
+    fontSize: 14,
+    color: '#687087',
+    lineHeight: 20,
   },
-  equalsText: {
-    color: '#ffffff',
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 18,
   },
-  secondaryText: {
-    color: '#dfe6ef',
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 4,
+    borderRadius: 20,
+    paddingVertical: 18,
+    alignItems: 'center',
+    borderWidth: 1.5,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6E778D',
+    fontWeight: '600',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    color: '#1F2A3D',
+    fontWeight: '700',
+  },
+  sectionLink: {
+    fontSize: 13,
+    color: '#6C63FF',
+    fontWeight: '700',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    marginBottom: 18,
+    gap: 10,
+  },
+  actionChip: {
+    backgroundColor: '#EDEBFF',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  actionText: {
+    color: '#2C265F',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  taskRow: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 10,
+    alignItems: 'center',
+    shadowColor: '#dfe6ff',
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#C7D0EF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  checkboxDone: {
+    backgroundColor: '#6C63FF',
+    borderColor: '#6C63FF',
+  },
+  checkmark: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  taskInfo: {
+    flex: 1,
+  },
+  taskName: {
+    fontSize: 16,
+    color: '#1F2A3D',
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  taskTime: {
+    fontSize: 12,
+    color: '#7E879A',
+  },
+  taskDone: {
+    textDecorationLine: 'line-through',
+    color: '#9AA5B8',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 14,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: '#dfe6ff',
+    shadowOpacity: 0.35,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 6,
+  },
+  navItem: {
+    fontSize: 12,
+    color: '#7C859B',
+    fontWeight: '700',
+  },
+  navActive: {
+    color: '#6C63FF',
   },
 });
-

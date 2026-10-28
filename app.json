@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Material Calculator",
-    "slug": "material-calculator",
+    "name": "Koro",
+    "slug": "koro",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
     ]
